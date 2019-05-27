@@ -2,6 +2,56 @@
 #include "game/game.h"
 #include "netgame.h"
 #include "chatwindow.h"
+#include "util/armhook.h"
+/*
+int GetWeaponModel(unsigned int weaponid) 
+{
+	int model;
+	switch(weaponid)
+	{
+		case 1: model=331; break;
+		case 2: model=333; break;
+		case 3: model=334; break;
+		case 4: model=335; break;
+		case 5: model=336; break;
+		case 6: model=337; break;
+		case 7: model=338; break;
+		case 8: model=339; break;
+		case 9: model=341; break;
+		case 10: model=321; break;
+		case 11: model=322; break;
+		case 12: model=323; break;
+		case 13: model=324; break;
+		case 14: model=325; break;
+		case 15: model=326; break;
+		case 16: model=342; break;
+		case 17: model=343; break;
+		case 18: model=344; break;
+		case 22: model=346; break;
+		case 23: model=347; break;
+		case 24: model=348; break;
+		case 25: model=349; break;
+		case 26: model=350; break;
+		case 27: model=351; break;
+		case 28: model=352; break;
+		case 29: model=353; break;
+		case 30: model=355; break;
+		case 31: model=356; break;
+		case 32: model=372; break;
+		case 33: model=357; break;
+		case 34: model=358; break;
+		case 35: model=359; break;
+		case 36: model=360; break;
+		case 37: model=361; break;
+		case 38: model=362; break;
+		case 39: model=363; break;
+		case 41: model=365; break;
+		case 42: model=366; break;
+		case 46: model=371; break;
+	}
+	if(model < 300) return -1;
+	return model;
+}*/
 
 extern CGame *pGame;
 extern CNetGame *pNetGame;
@@ -24,6 +74,7 @@ CRemotePlayer::CRemotePlayer()
 	m_dwLastRecvTick = 0;
 	m_dwUnkTime = 0;
 
+	m_byteCurrentWeapon = 0;
 	m_byteSpecialAction = 0;
 	m_byteSeatID = 0;
 
@@ -312,16 +363,23 @@ void CRemotePlayer::UpdateVehicleRotation()
 bool CRemotePlayer::Spawn(uint8_t byteTeam, unsigned int iSkin, VECTOR *vecPos, float fRotation, 
 	uint32_t dwColor, uint8_t byteFightingStyle, bool bVisible)
 {
+
+	Log("WorldPlayerAdd -> Spawn: skin %d, vec %f, %f, %f, Rot %f, color %d, fight %d", iSkin, vecPos->X, vecPos->Y, vecPos->Z, fRotation, dwColor, byteFightingStyle);
+
 	if(m_pPlayerPed)
 	{
+		Log("WorldPlayerAdd -> Spawn: RemovePlayer");
 		pGame->RemovePlayer(m_pPlayerPed);
 		m_pPlayerPed = nullptr;
 	}
+	Log("WorldPlayerAdd -> Spawn: NewPlayer");
 
 	CPlayerPed *pPlayer = pGame->NewPlayer(iSkin, vecPos->X, vecPos->Y, vecPos->Z, fRotation);
 
 	if(pPlayer)
 	{
+		Log("WorldPlayerAdd -> Spawn: SetPlayerColor");
+		
 		if(dwColor != 0) SetPlayerColor(dwColor);
 
 		if(m_dwMarkerID)
@@ -333,15 +391,22 @@ bool CRemotePlayer::Spawn(uint8_t byteTeam, unsigned int iSkin, VECTOR *vecPos, 
 		if(pNetGame->m_iShowPlayerMarkers) 
 			pPlayer->ShowMarker(m_PlayerID);
 
+		Log("WorldPlayerAdd -> Spawn: m_fReportedHealth");
+
 		m_pPlayerPed = pPlayer;
 		m_fReportedHealth = 100.0f;
+
+		Log("WorldPlayerAdd -> Spawn: byteFightingStyle");
+
 		if(byteFightingStyle != 4)
 			m_pPlayerPed->SetFightingStyle(byteFightingStyle);
 
+		Log("WorldPlayerAdd -> Spawn: PLAYER_STATE_SPAWNED");
 		SetState(PLAYER_STATE_SPAWNED);
 		return true;
 	}
 
+	Log("WorldPlayerAdd -> Spawn: PLAYER_STATE_NONE");
 	SetState(PLAYER_STATE_NONE);
 	return false;
 }
@@ -483,6 +548,27 @@ void CRemotePlayer::Say(unsigned char* szText)
 	}
 }
 
+void CRemotePlayer::StoreAimFullSyncData(AIM_SYNC_DATA *paSync, uint32_t dwTime)
+{
+	if( !dwTime || (dwTime - m_dwUnkTime) >= 0 )
+	{
+		m_dwUnkTime = dwTime;
+
+		m_dwLastRecvTick = GetTickCount();
+		memcpy(&m_aimSync, paSync, sizeof(AIM_SYNC_DATA));
+
+		m_byteCamMode = paSync->byteCamMode;
+		m_vecAimf1.X = paSync->vecAimf1.X;
+		m_vecAimf1.Y = paSync->vecAimf1.Y;
+		m_vecAimf1.Z = paSync->vecAimf1.Z;
+		m_vecAimPos = paSync->vecAimPos;
+		m_fAimZ = paSync->fAimZ;
+		m_byteCamExtZoom = paSync->byteCamExtZoom;
+		m_byteAspectRatio = paSync->byteAspectRatio;
+		m_byteWeaponState =  WS_MORE_BULLETS;
+	}
+}
+
 void CRemotePlayer::StoreOnFootFullSyncData(ONFOOT_SYNC_DATA *pofSync, uint32_t dwTime)
 {
 	if( !dwTime || (dwTime - m_dwUnkTime) >= 0 )
@@ -494,6 +580,12 @@ void CRemotePlayer::StoreOnFootFullSyncData(ONFOOT_SYNC_DATA *pofSync, uint32_t 
 		m_fReportedHealth = (float)pofSync->byteHealth;
 		m_fReportedArmour = (float)pofSync->byteArmour;
 		m_byteSpecialAction = pofSync->byteSpecialAction;
+		m_byteCurrentWeapon = pofSync->byteCurrentWeapon;
+
+		if (m_byteCurrentWeapon) {
+			NOP(g_libGTASA+0x434D94, 6);
+		}
+		
 		m_byteUpdateFromNetwork = UPDATE_TYPE_ONFOOT;
 
 		if(m_pPlayerPed)
@@ -528,8 +620,13 @@ void CRemotePlayer::StoreInCarFullSyncData(INCAR_SYNC_DATA *picSync, uint32_t dw
 		m_byteUpdateFromNetwork = UPDATE_TYPE_INCAR;
 		m_dwLastRecvTick = GetTickCount();
 
+		// m_byteCurrentWeapon = (uint8_t)picSync->byteCurrentWeapon;
 		m_byteSpecialAction = 0;
 
+		if(m_pPlayerPed)
+		{
+			m_pPlayerPed->m_byteCurrentWeapon = (uint8_t)picSync->byteCurrentWeapon;
+		}
 		if(m_pPlayerPed && !m_pPlayerPed->IsInVehicle())
 			HandleVehicleEntryExit();
 

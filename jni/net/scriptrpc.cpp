@@ -136,9 +136,54 @@ void ScrSetFightingStyle(RPCParameters *rpcParams)
 	}
 }
 
+void ScrSetPlayerAttachedObject(RPCParameters *rpcParams)
+{
+	Log("RPC: ScrSetPlayerAttachedObject");
+
+	unsigned char * Data = reinterpret_cast<unsigned char *>(rpcParams->input);
+	int iBitLength = rpcParams->numberOfBitsOfData;
+
+	RakNet::BitStream bsData(Data, (iBitLength/8)+1, false);
+
+	PLAYERID PlayerID;
+	uint32_t index, bone;
+	bool create;
+	float fOffsetX, fOffsetY, fOffsetZ, fRotX, fRotY, fRotZ, fScaleX, fScaleY, fScaleZ;
+	unsigned int model, materialcolor1, materialcolor2;
+
+	bsData.Read( PlayerID );
+	bsData.Read( index );
+	bsData.Read( create );
+	bsData.Read( model );
+	bsData.Read( bone );
+
+	bsData.Read( fOffsetX );
+	bsData.Read( fOffsetY );
+	bsData.Read( fOffsetZ );
+
+	bsData.Read( fRotX );
+	bsData.Read( fRotY );
+	bsData.Read( fRotZ );
+
+	bsData.Read( fScaleX );
+	bsData.Read( fScaleY );
+	bsData.Read( fScaleZ );
+
+	bsData.Read( materialcolor1 );
+	bsData.Read( materialcolor2 );
+
+	if (create) {
+		Log("CreatePlayer %d Attach %d to %d index %d", PlayerID, model, bone, index);
+	}
+	else {
+		Log("RemovePlayer %d Attach %d", PlayerID, index);
+	}
+
+}
+
 void ScrSetPlayerSkin(RPCParameters *rpcParams)
 {
-	//Log("RPC: ScrSetPlayerSkin");
+	Log("RPC: ScrSetPlayerSkin");
 	unsigned char * Data = reinterpret_cast<unsigned char *>(rpcParams->input);
 	int iBitLength = rpcParams->numberOfBitsOfData;
 
@@ -149,10 +194,14 @@ void ScrSetPlayerSkin(RPCParameters *rpcParams)
 	bsData.Read(uiSkin);
 
 	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
+
 	if(iPlayerID == pPlayerPool->GetLocalPlayerID())
 		pPlayerPool->GetLocalPlayer()->GetPlayerPed()->SetModelIndex(uiSkin);
 	else
 	{
+		if(pPlayerPool->GetSlotState(iPlayerID) && pPlayerPool->GetAt(iPlayerID)->GetPlayerPed())
+			pPlayerPool->GetAt(iPlayerID)->GetPlayerPed()->SetModelIndex(uiSkin);
+
 		if(pPlayerPool->GetSlotState(iPlayerID) && pPlayerPool->GetAt(iPlayerID)->GetPlayerPed())
 			pPlayerPool->GetAt(iPlayerID)->GetPlayerPed()->SetModelIndex(uiSkin);
 	}
@@ -675,6 +724,31 @@ void ScrResetMoney(RPCParameters *rpcParams)
 	pGame->ResetLocalMoney();
 }
 
+void ScrGivePlayerWeapon(RPCParameters *rpcParams)
+{
+	Log("RPC: ScrGivePlayerWeapon");
+
+	unsigned char* Data = reinterpret_cast<unsigned char *>(rpcParams->input);
+	int iBitLength = rpcParams->numberOfBitsOfData;
+
+	RakNet::BitStream bsData((unsigned char*)Data,(iBitLength/8)+1,false);
+
+	uint32_t weaponID;
+	uint32_t weaponAmmo;
+
+	bsData.Read(weaponID);
+	bsData.Read(weaponAmmo);
+	//Log("Weapon %d %d", weaponID, weaponAmmo);
+
+	// pLocalPlayer->GetPlayerPed()->m_byteCurrentWeapon;
+	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
+	pPlayerPool->GetLocalPlayer()->GetPlayerPed()->m_byteCurrentWeapon = weaponID;
+
+	/*CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
+	pVehiclePool->LinkToInterior(VehicleID, (int)byteInterior);*/
+
+}
+
 void ScrLinkVehicle(RPCParameters *rpcParams)
 {
 	Log("RPC: ScrLinkVehicle");
@@ -930,11 +1004,6 @@ void ScrCreateObject(RPCParameters *rpcParams)
 	bsData.Read(wObjectID);
 	bsData.Read(ModelID);
 
-	if (ModelID >= 11682 && ModelID <= 19999) {
-		Log("Ignore object id: %d model: %d x: %f y: %f z: %f", wObjectID, ModelID, vecPos.X, vecPos.Y, vecPos.Z);
-		return;
-	}
-
 	bsData.Read(vecPos.X);
 	bsData.Read(vecPos.Y);
 	bsData.Read(vecPos.Z);
@@ -945,11 +1014,7 @@ void ScrCreateObject(RPCParameters *rpcParams)
 
 	bsData.Read(fDrawDistance);
 
-	//LOGI("id: %d model: %d x: %f y: %f z: %f", wObjectID, ModelID, vecPos.X, vecPos.Y, vecPos.Z);
-	//LOGI("vecRot: %f %f %f", vecRot.X, vecRot.Y, vecRot.Z);
-
 	iTotalObjects++;
-	//Log("ID: %d, model: %d. iTotalObjects = %d", wObjectID, ModelID, iTotalObjects);
 
 	CObjectPool *pObjectPool = pNetGame->GetObjectPool();
 	pObjectPool->New(wObjectID, ModelID, vecPos, vecRot, fDrawDistance);
@@ -1103,7 +1168,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetCameraLookAt, ScrSetCameraLookAt);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerFacingAngle, ScrSetPlayerFacingAngle);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetFightingStyle, ScrSetFightingStyle);
-	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerSkin, ScrSetPlayerSkin);
+	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerAttachedObject, ScrSetPlayerAttachedObject);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrApplyPlayerAnimation, ScrApplyPlayerAnimation);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrClearPlayerAnimations, ScrClearPlayerAnimations);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetSpawnInfo, ScrSetSpawnInfo);
@@ -1127,6 +1192,7 @@ void RegisterScriptRPCs(RakClientInterface* pRakClient)
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrVehicleParamsEx, ScrVehicleParamsEx);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrHaveSomeMoney, ScrHaveSomeMoney);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrResetMoney, ScrResetMoney);
+	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrGivePlayerWeapon, ScrGivePlayerWeapon);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrLinkVehicle, ScrLinkVehicle);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrRemovePlayerFromVehicle, ScrRemovePlayerFromVehicle);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetVehicleHealth, ScrSetVehicleHealth);
@@ -1163,6 +1229,7 @@ void UnRegisterScriptRPCs(RakClientInterface* pRakClient)
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetPlayerFacingAngle);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetFightingStyle);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetPlayerSkin);
+	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetPlayerAttachedObject);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrApplyPlayerAnimation);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrClearPlayerAnimations);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetSpawnInfo);
@@ -1186,6 +1253,7 @@ void UnRegisterScriptRPCs(RakClientInterface* pRakClient)
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrVehicleParamsEx);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrHaveSomeMoney);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrResetMoney);
+	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrGivePlayerWeapon);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrLinkVehicle);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrRemovePlayerFromVehicle);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetVehicleHealth);
@@ -1193,7 +1261,7 @@ void UnRegisterScriptRPCs(RakClientInterface* pRakClient)
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrSetVehicleVelocity);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrNumberPlate);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrInterpolateCamera);
-	
+
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrAddGangZone);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrRemoveGangZone);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrFlashGangZone);

@@ -42,13 +42,15 @@ public:
 
 	ENTITY_TYPE* GetEntityUnderPlayer();
 
-	// допилить
+	// допилитя
 	void ClearAllWeapons();
-	// допилить
+	// допилитя
 	void DestroyFollowPedTask();
-	// допилить
+	// допилитя
 	void ResetDamageEntity();
-
+	// допилитя
+	uint8_t GetCurrentWeapon();
+	
 	// 0.3.7
 	void RestartIfWastedAt(VECTOR *vecRestart, float fRotation);
 	// 0.3.7
@@ -80,6 +82,7 @@ public:
 
 public:
 	PED_TYPE*	m_pPed;
+	uint8_t		m_byteCurrentWeapon;
 	uint8_t		m_bytePlayerNumber;
 	uint32_t	m_dwArrow;
 };

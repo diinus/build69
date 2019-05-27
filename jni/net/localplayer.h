@@ -197,6 +197,7 @@ private:
 	ONFOOT_SYNC_DATA 	m_OnFootData;
 	INCAR_SYNC_DATA 	m_InCarData;
 	PASSENGER_SYNC_DATA m_PassengerData;
+	AIM_SYNC_DATA 		m_AimData;
 
 	int					m_iSelectedClass;
 	bool				m_bHasSpawnInfo;

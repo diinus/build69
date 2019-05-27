@@ -72,7 +72,7 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char* szPlayerName, 
 
 	pGame->EnableClock(false);
 	pGame->EnableZoneNames(false);
-	if(pChatWindow) pChatWindow->AddDebugMessage("{FFFFFF}SA-MP {B9C9BF}" SAMP_VERSION " {FFFFFF}Started");
+	if(pChatWindow) pChatWindow->AddDebugMessage("กำลังเริ่มต้น {FFFFFF}SA-MP {B9C9BF}" SAMP_VERSION " {FFFFFF}");
 }
 
 CNetGame::~CNetGame()
@@ -161,7 +161,8 @@ void CNetGame::Process()
 	if(GetGameState() == GAMESTATE_WAIT_CONNECT &&
 		(GetTickCount() - m_dwLastConnectAttempt) > 3000)
 	{
-		if(pChatWindow) pChatWindow->AddDebugMessage("Connecting to %s:%d...", m_szHostOrIp, m_iPort);
+		//if(pChatWindow) pChatWindow->AddDebugMessage("Connecting to %s:%d", m_szHostOrIp, m_iPort);
+		if(pChatWindow) pChatWindow->AddDebugMessage("Connecting to Server...");
 		m_pRakClient->Connect(m_szHostOrIp, m_iPort, 0, 0, 5);
 		m_dwLastConnectAttempt = GetTickCount();
 		SetGameState(GAMESTATE_CONNECTING);
@@ -233,6 +234,10 @@ void CNetGame::UpdateNetwork()
 
 			case ID_MARKERS_SYNC:
 			Packet_MarkersSync(pkt);
+			break;
+
+			case ID_AIM_SYNC:
+			Packet_AimSync(pkt);
 			break;
 		}
 
@@ -547,6 +552,7 @@ void CNetGame::Packet_PlayerSync(Packet* pkt)
 
 	// CURRENT WEAPON
     bsPlayerSync.Read(ofSync.byteCurrentWeapon);
+
     // SPECIAL ACTION
     bsPlayerSync.Read(ofSync.byteSpecialAction);
 
@@ -726,5 +732,32 @@ void CNetGame::Packet_MarkersSync(Packet *pkt)
 				}
 			}
 		}
+	}
+}
+
+void CNetGame::Packet_AimSync(Packet *pkt)
+{  
+	CRemotePlayer *pPlayer;
+	RakNet::BitStream bsAimSync((unsigned char *)pkt->data, pkt->length, false);
+	AIM_SYNC_DATA aimSync;
+	PLAYERID playerId;
+
+
+	bsAimSync.IgnoreBits(8);
+	bsAimSync.Read(playerId);
+
+	if(playerId < 0 || playerId >= MAX_PLAYERS) return;
+
+	memset(&aimSync, 0, sizeof(AIM_SYNC_DATA));
+
+	bsAimSync.Read((char*)&aimSync, sizeof(AIM_SYNC_DATA));
+
+	//Log("Packet_AimSync: %d", playerId);
+
+	if(m_pPlayerPool)
+	{
+		pPlayer = m_pPlayerPool->GetAt(playerId);
+		if(pPlayer)
+			pPlayer->StoreAimFullSyncData(&aimSync, 0);
 	}
 }

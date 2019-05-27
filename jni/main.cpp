@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <ucontext.h>
+#include <pthread.h>
 
 #include "main.h"
 #include "game/game.h"
@@ -106,11 +107,21 @@ void InitInGame()
 
 	if(!bNetworkInited && pSettings->Get().bOnline)
 	{
+		/*
 		pNetGame = new CNetGame( 
 			encryptedAddress.decrypt(),
 			port, 
 			pSettings->Get().szNickName,
 			pSettings->Get().szPassword);
+		bNetworkInited = true;
+		*/
+		pNetGame = new CNetGame( 
+			/*"server.ls-rp.in.th",
+			7782,*/
+			"192.168.1.14",
+			7781,
+			pSettings->Get().szNickName,
+			"{(FeRs{(FeRs332=}332=}"); // pSettings->Get().szPassword
 		bNetworkInited = true;
 		return;
 	}

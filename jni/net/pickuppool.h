@@ -48,6 +48,7 @@ public:
 	~CPickupPool();
 
 	void New(PICKUP* pPickup, int iPickup);
+	void NewWeapon(PICKUP* pPickup, int iPickup);
 	void Destroy(int iPickup);
 	void PickedUp(int iPickup);
 	void Process();

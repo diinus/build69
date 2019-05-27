@@ -513,6 +513,34 @@ void ExitVehicle(RPCParameters *rpcParams)
 	}	
 }
 
+void PlayerGiveTakeDamage(RPCParameters *rpcParams)
+{
+	Log("RPC: PlayerGiveTakeDamage");
+	unsigned char * Data = reinterpret_cast<unsigned char *>(rpcParams->input);
+	int iBitLength = rpcParams->numberOfBitsOfData;
+
+	RakNet::BitStream bsData((unsigned char*)Data,(iBitLength/8)+1,false);
+	bool flag;
+	uint16_t playerId;
+	float Damage;
+	uint32_t weaponid;
+	uint32_t bodypart;
+
+	bsData.Read(flag);
+	bsData.Read(playerId);
+	bsData.Read(Damage);
+	bsData.Read(weaponid);
+	bsData.Read(bodypart);
+
+	if (flag) {
+		Log("+PlayerGiveTakeDamage (%d, %f, %d, %d)", playerId, Damage, weaponid, bodypart);
+	}
+	else {
+		Log("-PlayerGiveTakeDamage (%d, %f, %d, %d)", playerId, Damage, weaponid, bodypart);
+	}
+	// pNetGame->GetRakClient()->RPC(&RPC_PlayerGiveTakeDamage, &bsData, HIGH_PRIORITY, RELIABLE_SEQUENCED, 0, false, UNASSIGNED_NETWORK_ID, NULL);
+}
+
 void DialogBox(RPCParameters *rpcParams)
 {
 	Log("RPC: DialogBox");
@@ -523,6 +551,7 @@ void DialogBox(RPCParameters *rpcParams)
 	uint16_t wDialogID;
 	uint8_t byteDialogStyle;
 	uint8_t len;
+
 	char szBuff[4096+1];
 	RakNet::BitStream bsData((unsigned char *)Data,(iBitLength/8)+1,false);
 
@@ -532,24 +561,25 @@ void DialogBox(RPCParameters *rpcParams)
 	bsData.Read(byteDialogStyle);
 	pDialogWindow->m_wDialogID = wDialogID;
 	pDialogWindow->m_byteDialogStyle = byteDialogStyle;
+	pDialogWindow->m_listitem = -1;
 
 	// title
 	bsData.Read(len);
 	bsData.Read(szBuff, len);
 	szBuff[len] = '\0';
-	cp1251_to_utf8(pDialogWindow->m_utf8Title, szBuff);
+	iso_8859_11_to_utf8(pDialogWindow->m_utf8Title, szBuff);
 
 	// button1
 	bsData.Read(len);
 	bsData.Read(szBuff, len);
 	szBuff[len] = '\0';
-	cp1251_to_utf8(pDialogWindow->m_utf8Button1, szBuff);
+	iso_8859_11_to_utf8(pDialogWindow->m_utf8Button1, szBuff);
 
 	// button2
 	bsData.Read(len);
 	bsData.Read(szBuff, len);
 	szBuff[len] = '\0';
-	cp1251_to_utf8(pDialogWindow->m_utf8Button2, szBuff);
+	iso_8859_11_to_utf8(pDialogWindow->m_utf8Button2, szBuff);
 
 	// info
 	stringCompressor->DecodeString(szBuff, 4096, &bsData);
@@ -557,9 +587,9 @@ void DialogBox(RPCParameters *rpcParams)
 
 	
 	Log("DialogBox: %d", wDialogID);
-	if(wDialogID == 2)
+	if(wDialogID == 65535)
 	{
-		pNetGame->SendDialogResponse(wDialogID, 1, -1, "123123");
+		pNetGame->SendDialogResponse(wDialogID, 1, -1, " ");
 		return;
 	}
 
@@ -720,7 +750,7 @@ void Update3DTextLabel(RPCParameters *rpcParams)
 	CText3DLabelsPool *pLabelsPool = pNetGame->GetLabelPool();
 	if(pLabelsPool)
 	{
-		//pLabelsPool->Delete(LabelID);
+		//pLabelsPool->Update3DLabel(LabelID);
 	}
 }
 
@@ -750,6 +780,8 @@ void RegisterRPCs(RakClientInterface* pRakClient)
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ScrDialogBox, DialogBox);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_GameModeRestart, GameModeRestart);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_ConnectionRejected, ConnectionRejected);
+	pRakClient->RegisterAsRemoteProcedureCall(&RPC_PlayerGiveTakeDamage, PlayerGiveTakeDamage);
+	//pRakClient->RegisterAsRemoteProcedureCall(&RPC_DamageVehicle, DamageVehicle);
 
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_Pickup, Pickup);
 	pRakClient->RegisterAsRemoteProcedureCall(&RPC_DestroyPickup, DestroyPickup);
@@ -784,6 +816,8 @@ void UnRegisterRPCs(RakClientInterface* pRakClient)
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ScrDialogBox);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_GameModeRestart);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_ConnectionRejected);
+	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_PlayerGiveTakeDamage);
+	//pRakClient->UnregisterAsRemoteProcedureCall(&RPC_DamageVehicle);
 
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_Pickup);
 	pRakClient->UnregisterAsRemoteProcedureCall(&RPC_DestroyPickup);

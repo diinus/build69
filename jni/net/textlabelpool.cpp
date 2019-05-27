@@ -71,8 +71,8 @@ void CText3DLabelsPool::CreateTextLabel(int labelID, char* text, uint32_t color,
 	if (pTextLabel)
 	{
 		//pTextLabel->text = text;
-		cp1251_to_utf8(pTextLabel->text, text);
-		cp1251_to_utf8(pTextLabel->textWithoutColors, text);
+		iso_8859_11_to_utf8(pTextLabel->text, text);
+		iso_8859_11_to_utf8(pTextLabel->textWithoutColors, text);
 		FilterColors(pTextLabel->textWithoutColors);
 
 		pTextLabel->color = color;
@@ -102,6 +102,8 @@ void CText3DLabelsPool::Delete(int labelID)
 {
 	if (m_pTextLabels[labelID])
 	{
+		m_pTextLabels[labelID]->text[0] = '\0';
+
 		delete m_pTextLabels[labelID];
 		m_pTextLabels[labelID] = nullptr;
 		m_bSlotState[labelID] = false;
@@ -135,7 +137,7 @@ void CText3DLabelsPool::Update3DLabel(int labelID, uint32_t color, char* text)
 	{
 		m_pTextLabels[labelID]->color = color;
 		//m_pTextLabels[labelID]->text = text;
-		cp1251_to_utf8(m_pTextLabels[labelID]->text, text);
+		iso_8859_11_to_utf8(m_pTextLabels[labelID]->text, text);
 	}
 }
 

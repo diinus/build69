@@ -28,12 +28,40 @@ CSpawnScreen::CSpawnScreen()
 
 void CSpawnScreen::Render()
 {
+
 	if(!m_bEnabled) return;
 
-	ImGuiIO &io = ImGui::GetIO();
 	CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
 	CLocalPlayer *pLocalPlayer = 0;
 	if(pPlayerPool) pLocalPlayer = pPlayerPool->GetLocalPlayer();
+
+	if(pLocalPlayer->IsSpectating()) {
+		/*ImGui::Begin("SelectScreen", nullptr, 
+			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | 
+			ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
+
+		if (ImGui::Button("<<", ImVec2(m_fButWidth, m_fButHeight)))
+		{
+
+		}
+		ImGui::SameLine(0, 0);
+		if (ImGui::Button(">>", ImVec2(m_fButWidth, m_fButHeight)))
+		{
+
+		}
+
+		ImGui::SetWindowSize(ImVec2(-1, -1));
+		ImVec2 size = ImGui::GetWindowSize();
+		
+		ImGui::SetWindowPos( ImVec2( ((io.DisplaySize.x - size.x)/2), ((io.DisplaySize.y * 0.95) - size.y) ) );
+		ImGui::End();*/
+		return;
+	}
+
+	ImGuiIO &io = ImGui::GetIO();
+	/*CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
+	CLocalPlayer *pLocalPlayer = 0;
+	if(pPlayerPool) pLocalPlayer = pPlayerPool->GetLocalPlayer();*/
 
 	ImGui::Begin("SpawnScreen", nullptr, 
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | 

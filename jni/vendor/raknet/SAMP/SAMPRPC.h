@@ -53,10 +53,12 @@ extern int RPC_StopAudioStream;
 extern int RPC_ClickPlayer;
 extern int RPC_ClickTextDraw;
 extern int RPC_MapMarker;
+extern int RPC_PlayerGiveTakeDamage; // Update take/give damage
 
 extern int RPC_ScrSetSpawnInfo;
 extern int RPC_ScrSetPlayerTeam;
 extern int RPC_ScrSetPlayerSkin;
+extern int RPC_ScrSetPlayerAttachedObject;
 extern int RPC_ScrSetPlayerName;
 extern int RPC_ScrSetPlayerPos;
 extern int RPC_ScrSetPlayerPosFindZ;

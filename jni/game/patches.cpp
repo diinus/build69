@@ -105,10 +105,10 @@ void ApplyInGamePatches()
 	UnFuck(g_libGTASA+0x398A34);
 	NOP(g_libGTASA+0x398A34, 2);
 
-	// множитель для MaxHealth
+	// множителя для MaxHealth
 	UnFuck(g_libGTASA+0x3BAC68);
 	*(float*)(g_libGTASA+0x3BAC68) = 176.0f;
-	// множитель для Armour
+	// множителя для Armour
 	UnFuck(g_libGTASA+0x27D884);
 	*(float*)(g_libGTASA+0x27D884) = 176.0;
 

@@ -30,6 +30,7 @@ void ImGui_ImplRenderWare_ShutDown();
 	Все координаты GUI-элементов задаются
 	относительно разрешения 1920x1080
 */
+
 #define MULT_X	0.00052083333f	// 1/1920
 #define MULT_Y	0.00092592592f 	// 1/1080
 
@@ -69,18 +70,24 @@ CGUI::CGUI()
 	// cp1251 ranges
 	static const ImWchar ranges[] = 
 	{
-		0x0020, 0x0080,
+		/*0x0020, 0x0080,
 		0x00A0, 0x00C0,
-		0x0400, 0x0460,
+		0x0E00, 0x0E7F,
 		0x0490, 0x04A0,
 		0x2010, 0x2040,
 		0x20A0, 0x20B0,
 		0x2110, 0x2130,
-		0
+		0*/
+        0x0020, 0x0080, // Basic Latin
+        0x2010, 0x205E, // Punctuations
+        0x0E00, 0x0E5B, // Thai
+        0,
 	};
+
 	Log("GUI | Loading font: %s", pSettings->Get().szFont);
 	m_pFont = io.Fonts->AddFontFromFileTTF(path, m_fFontSize, nullptr, ranges);
 	Log("GUI | ImFont pointer = 0x%X", m_pFont);
+
 }
 
 CGUI::~CGUI()

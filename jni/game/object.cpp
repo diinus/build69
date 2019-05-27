@@ -34,7 +34,7 @@ CObject::~CObject()
 
 void CObject::Process(float fElapsedTime)
 {
-	// допилить
+	// to add
 }
 
 float CObject::DistanceRemaining(MATRIX4X4 *matPos)

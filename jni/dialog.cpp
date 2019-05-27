@@ -5,7 +5,12 @@
 #include "dialog.h"
 #include "vendor/imgui/imgui_internal.h"
 #include "keyboard.h"
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <string.h>
 #include <stdlib.h>
+
 
 extern CGUI *pGUI;
 extern CGame *pGame;
@@ -29,9 +34,9 @@ CDialogWindow::~CDialogWindow()
 
 void CDialogWindow::Show(bool bShow)
 {
-	if(pGame) 
+	if(pGame)  {
 		pGame->FindPlayerPed()->TogglePlayerControllable(!bShow);
-
+	}
 	m_bIsActive = bShow;
 }
 
@@ -52,6 +57,7 @@ void CDialogWindow::Clear()
 	m_bIsActive = false;
 	m_byteDialogStyle = 0;
 	m_wDialogID = -1;
+	m_listitem = -1;
 	m_utf8Title[0] = 0;
 	m_utf8Button1[0] = 0;
 	m_utf8Button2[0] = 0;
@@ -93,7 +99,7 @@ void CDialogWindow::SetInfo(char* szInfo, int length)
 		return;
 	}
 
-	cp1251_to_utf8(m_putf8Info, szInfo);
+	iso_8859_11_to_utf8(m_putf8Info, szInfo);
 
 	// =========
 	char szNonColorEmbeddedMsg[4200];
@@ -117,7 +123,7 @@ void CDialogWindow::SetInfo(char* szInfo, int length)
 	szNonColorEmbeddedMsg[iNonColorEmbeddedMsgLen] = 0;
 	// ========
 
-	cp1251_to_utf8(m_pszInfo, szNonColorEmbeddedMsg);
+	iso_8859_11_to_utf8(m_pszInfo, szNonColorEmbeddedMsg);
 }
 
 bool ProcessInlineHexColor(const char* start, const char* end, ImVec4& color);
@@ -188,16 +194,17 @@ void TextWithColors(const char* fmt, ...)
 		ImGui::PopStyleColor();
 }
 
+
 void DialogWindowInputHandler(const char* str)
 {
 	if(!str || *str == '\0') return;
 	strcpy(szDialogInputBuffer, str);
-	cp1251_to_utf8(utf8DialogInputBuffer, str);
+	iso_8859_11_to_utf8(utf8DialogInputBuffer, str);
 }
 
 void CDialogWindow::Render()
 {
-	if(!m_bIsActive || !m_putf8Info) return;
+	if(!m_bIsActive || !m_putf8Info || m_wDialogID == 65535) return;
 
 	ImGuiIO &io = ImGui::GetIO();
 
@@ -208,11 +215,13 @@ void CDialogWindow::Render()
 
 	switch(m_byteDialogStyle)
 	{
+
 		case DIALOG_STYLE_MSGBOX:
 		TextWithColors(m_putf8Info);
 		ImGui::ItemSize( ImVec2(0, pGUI->GetFontSize()/2) );
 		break;
 
+		case DIALOG_STYLE_PASSWORD:
 		case DIALOG_STYLE_INPUT:
 		TextWithColors(m_putf8Info);
 		ImGui::ItemSize( ImVec2(0, pGUI->GetFontSize()/2) );
@@ -225,15 +234,74 @@ void CDialogWindow::Render()
 
 		ImGui::ItemSize( ImVec2(0, pGUI->GetFontSize()/2) );
 		break;
-	}
 
+		case DIALOG_STYLE_LIST:
+
+			char tempStr[4096];
+			static const char* current_item = NULL;
+		
+			strcpy(tempStr, m_putf8Info);
+			tempStr[sizeof(tempStr) - 1] = '\0';
+
+			std::vector<char*> v;
+			char* chars_array = strtok(tempStr, "\n");
+
+			while(chars_array)
+			{
+				v.push_back(chars_array);
+				chars_array = strtok(NULL, "\n");
+			}
+
+			bool pushedColorStyle = false;
+
+			ImGui::ItemSize( ImVec2(0.5f, pGUI->GetFontSize()/2) );
+			ImGui::BeginChild("scrolling", ImVec2(ImGui::CalcTextSize(m_pszInfo).x * 2.5f, ImGui::GetFrameHeightWithSpacing()*7 + 40), true/*, ImGuiWindowFlags_HorizontalScrollbar*/);
+
+			// Log("m_listitem %d", m_listitem);
+
+			for(size_t n = 0; n < v.size(); ++n)
+			{
+				/*bool is_selected = (m_listitem == n);
+				if (ImGui::Selectable(v[n], is_selected)) {
+					m_listitem = n;
+					DialogWindowInputHandler(v[n]);
+				}
+				if (is_selected) ImGui::SetItemDefaultFocus();*/
+				bool is_selected = (m_listitem == n);
+
+				if (is_selected) {
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.06f, 0.53f, 0.98f, 1.00f));
+					pushedColorStyle = true;
+					// ImVec4(0.06f, 0.53f, 0.98f, 1.00f)
+				}
+
+				if (ImGui::Button(v[n], ImVec2(ImGui::CalcTextSize(m_pszInfo).x * 2.0f, pGUI->GetFontSize() * 1.5f)) || is_selected || m_listitem == 65535) {
+					m_listitem = n;
+					DialogWindowInputHandler(v[n]);
+					// Log("m_listitem %d", m_listitem);
+				}
+				if (pushedColorStyle)
+				{
+					ImGui::PopStyleColor();
+					pushedColorStyle = false;
+				}
+				/*if( ImGui::Button(v[n], ImVec2(ImGui::CalcTextSize(m_pszInfo).x * 2.5f, pGUI->GetFontSize() * 1.5f)) )
+				{
+					TextWithColors(v[n]);
+					m_listitem = n;
+				}*/
+			}
+			ImGui::EndChild();
+			ImGui::ItemSize( ImVec2(0.5f, pGUI->GetFontSize()/2) );
+		break;
+	}
 	if(m_utf8Button1[0] != 0) 
 	{
 		if(ImGui::Button(m_utf8Button1, ImVec2(ImGui::CalcTextSize(m_utf8Button1).x * 1.5f, pGUI->GetFontSize() * 2)))
 		{
 			Show(false);
 			if(pNetGame) 
-				pNetGame->SendDialogResponse(m_wDialogID, 1, -1, szDialogInputBuffer);
+				pNetGame->SendDialogResponse(m_wDialogID, 1, m_listitem, szDialogInputBuffer);
 		}
 	}
 	ImGui::SameLine(0, pGUI->GetFontSize());
@@ -243,11 +311,10 @@ void CDialogWindow::Render()
 		{
 			Show(false);
 			if(pNetGame) 
-				pNetGame->SendDialogResponse(m_wDialogID, 0, -1, szDialogInputBuffer);
+				pNetGame->SendDialogResponse(m_wDialogID, 0, m_listitem, szDialogInputBuffer);
 		}
 	}
 
-	// Размешаем по центру
 	ImGui::SetWindowSize(ImVec2(-1, -1));
 	ImVec2 size = ImGui::GetWindowSize();
 	ImGui::SetWindowPos( ImVec2( ((io.DisplaySize.x - size.x)/2), ((io.DisplaySize.y - size.y)/2)) );

@@ -384,16 +384,29 @@ extern "C" bool NotifyEnterVehicle(VEHICLE_TYPE *_pVehicle)
     if(VehicleID == INVALID_VEHICLE_ID) return false;
     if(!pVehiclePool->GetSlotState(VehicleID)) return false;
     pVehicle = pVehiclePool->GetAt(VehicleID);
-    if(pVehicle->m_bDoorsLocked) return false;
     if(pVehicle->m_pVehicle->entity.nModelIndex == TRAIN_PASSENGER) return false;
  
     if(pVehicle->m_pVehicle->pDriver &&
         pVehicle->m_pVehicle->pDriver->dwPedType != 0)
         return false;
  
+	MATRIX4X4 mat;
     CLocalPlayer *pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
- 
-    //if(pLocalPlayer->GetPlayerPed() && pLocalPlayer->GetPlayerPed()->GetCurrentWeapon() == WEAPON_PARACHUTE)
+  	CPlayerPed *pPlayerPed = pLocalPlayer->GetPlayerPed();
+
+	/*Log("pVehicle->m_pVehicle->dwDoorsLocked %d", pVehicle->m_pVehicle->dwDoorsLocked);
+	Log("pVehicle->m_bDoorsLocked %d", pVehicle->m_bDoorsLocked);*/
+	// if(pVehicle->m_bDoorsLocked) return false;
+ 	if(pVehicle->m_bDoorsLocked) 
+	{
+		if (pVehicle->GetVehicleSubtype() == VEHICLE_SUBTYPE_BIKE || pVehicle->GetVehicleSubtype() == VEHICLE_SUBTYPE_PUSHBIKE) {
+			pPlayerPed->GetMatrix(&mat);
+			pPlayerPed->TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+		}
+		return false;
+	}
+	// Log("Don't go in %d", pVehicle->m_pVehicle->dwDoorsLocked);
+    // if(pLocalPlayer->GetPlayerPed() && pLocalPlayer->GetPlayerPed()->GetCurrentWeapon() == WEAPON_PARACHUTE)
     //  pLocalPlayer->GetPlayerPed()->SetArmedWeapon(0);
  
     pLocalPlayer->SendEnterVehicleNotification(VehicleID, false);

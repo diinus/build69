@@ -47,6 +47,23 @@ void CPickupPool::New(PICKUP *pPickup, int iPickup)
 	m_iPickupCount++;
 }
 
+void CPickupPool::NewWeapon(PICKUP *pPickup, int iPickup)
+{
+	if(m_iPickupCount >= MAX_PICKUPS || iPickup < 0 || iPickup >= MAX_PICKUPS) return;
+	if(m_dwHnd[iPickup] != 0) ScriptCommand(&destroy_pickup, m_dwHnd[iPickup]);
+	m_Pickups[iPickup].iModel = pPickup->iModel;
+	m_Pickups[iPickup].iType = 8;
+	m_Pickups[iPickup].fX = pPickup->fX;
+	m_Pickups[iPickup].fY = pPickup->fY;
+	m_Pickups[iPickup].fZ = pPickup->fZ;
+	m_droppedWeapon[iPickup].bDroppedWeapon = true;
+
+	int pickupid = 0;
+	m_dwHnd[iPickup] = pGame->CreatePickup(pPickup->iModel, 8, pPickup->fX, pPickup->fY, pPickup->fZ, &pickupid);
+	m_iPickupID[iPickup] = pickupid;
+	m_iPickupCount++;
+}
+
 void CPickupPool::Destroy(int iPickup)
 {
 	if(m_iPickupCount <= 0 || iPickup < 0 || iPickup >= MAX_PICKUPS) return;
@@ -73,6 +90,8 @@ int CPickupPool::GetNumberFromID(int iPickup)
 
 void CPickupPool::PickedUp(int iPickup)
 {
+	//Log("CPickupPool::PickedUp iPickup = %d", iPickup);
+
 	int index = GetNumberFromID(iPickup);
 
 	Log("CPickupPool::PickedUp index = %d", index);

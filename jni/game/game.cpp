@@ -75,6 +75,15 @@ CVehicle* CGame::NewVehicle(int iType, float fPosX, float fPosY, float fPosZ, fl
 
 CObject *CGame::NewObject(int iModel, float fPosX, float fPosY, float fPosZ, VECTOR vecRot, float fDrawDistance)
 {
+	/*if(iModel > 0 && iModel < 20000)
+	{
+		uintptr_t *dwModelArray = (uintptr_t*)(g_libGTASA+0x87BF48);
+    	if(dwModelArray[iModel] != 0) {
+			CObject *pObjectNew = new CObject(iModel, fPosX, fPosY, fPosZ, vecRot, fDrawDistance);
+			return pObjectNew;
+		}
+	}
+	return nullptr;*/
 	CObject *pObjectNew = new CObject(iModel, fPosX, fPosY, fPosZ, vecRot, fDrawDistance);
 	return pObjectNew;
 }
@@ -344,7 +353,7 @@ void CGame::DisplayWidgets(bool bDisp)
 		*(uint16_t*)(g_libGTASA+0x8B82A0+0x10C) = 1;
 }
 
-// допилить
+// to add
 void CGame::PlaySound(int iSound, float fX, float fY, float fZ)
 {
 	ScriptCommand(&play_sound, fX, fY, fZ, iSound);

@@ -77,7 +77,7 @@ void CPlayerPed::Destroy()
 	}
 
 	/*
-		if(m_dwParachute) ... (допилить)
+		if(m_dwParachute) ... (допилитя)
 	*/
 
 	Log("Removing from vehicle..");
@@ -187,7 +187,7 @@ void CPlayerPed::PutDirectlyInVehicle(int iVehicleID, int iSeat)
 	if(!GamePool_Vehicle_GetAt(iVehicleID)) return;
 	if(!GamePool_Ped_GetAt(m_dwGTAId)) return;
 
-	/* допилить
+	/* допилитя
 	if(GetCurrentWeapon() == WEAPON_PARACHUTE) {
 		SetArmedWeapon(0);
 	}*/
@@ -197,7 +197,7 @@ void CPlayerPed::PutDirectlyInVehicle(int iVehicleID, int iSeat)
 	if(pVehicle->fHealth == 0.0f) return;
 	// check is cplaceable
 	if (pVehicle->entity.vtable == g_libGTASA+0x5C7358) return;
-	// check seatid (допилить)
+	// check seatid (допилитя)
 
 	if(iSeat == 0)
 	{
@@ -215,7 +215,7 @@ void CPlayerPed::PutDirectlyInVehicle(int iVehicleID, int iSeat)
 
 	if(pNetGame)
 	{
-		// допилить (трейлеры)
+		// допилитя (трейлеры)
 	}
 }
 
@@ -339,22 +339,40 @@ void CPlayerPed::SetModelIndex(unsigned int uiModel)
 	}
 }
 
-// допилить
+// допилитя
 void CPlayerPed::DestroyFollowPedTask()
 {
 
 }
 
-// допилить
+// допилитя
 void CPlayerPed::ClearAllWeapons()
 {
-
+	m_byteCurrentWeapon = 0;
 }
 
-// допилить
+// допилитя
 void CPlayerPed::ResetDamageEntity()
 {
 
+}
+// допилитя
+uint8_t CPlayerPed::GetCurrentWeapon()
+{
+	/*int modelid = GetWeaponModel(m_byteCurrentWeapon);
+	if (modelid != -1) {
+		Log("loaded modelid %d", modelid);
+		if(!pGame->IsModelLoaded(modelid))
+		{
+			pGame->RequestModel(modelid);
+			pGame->LoadRequestedModels();
+			while(!pGame->IsModelLoaded(modelid)) usleep(10);
+		}
+		MATRIX4X4 mat;
+		GetMatrix(&mat);
+		ScriptCommand(&create_pickup, modelid, 0, mat.pos.X, mat.pos.Y, mat.pos.Z);
+	}*/
+	return m_byteCurrentWeapon;
 }
 
 // 0.3.7
@@ -534,7 +552,7 @@ ENTITY_TYPE* CPlayerPed::GetEntityUnderPlayer()
 	return (ENTITY_TYPE*)entity;
 }
 
-// допилить
+// допилитя
 uint16_t CPlayerPed::GetKeys(uint16_t *lrAnalog, uint16_t *udAnalog)
 {
 	*lrAnalog = LocalPlayerKeys.wKeyLR;

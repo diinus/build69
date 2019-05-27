@@ -28,7 +28,7 @@ CVehicle::CVehicle(int iType, float fPosX, float fPosY, float fPosZ, float fRota
 
 		if(bSiren)
 		{
-			// допилить
+			// to add
 		}
 		else
 		{
@@ -97,7 +97,7 @@ CVehicle::~CVehicle()
 
 		if(m_pTrailer)
 		{
-			// detach trailer (допилить)
+			// detach trailer (to add)
 		}
 
 		// тут еще какая-то интересная шняга
@@ -339,8 +339,33 @@ void CVehicle::SetEngineState(int iState)
 
 void CVehicle::UpdateDamageStatus(uint32_t dwPanelDamage, uint32_t dwDoorDamage, uint8_t byteLightDamage)
 {
-
+	//Log("UpdateDamageStatus");
+// UINT16 wVehicleID, UINT32 panels, UINT32 doors, UINT8 lights, UINT8 tires
+	
+	
+	/*RakNet::BitStream bsSend;
+	bsSend.Write(X);
+	bsSend.Write(dwPanelDamage);
+	bsSend.Write(dwDoorDamage);
+	bsSend.Write(byteLightDamage);
+	pNetGame->GetRakClient()->RPC(&RPC_DamageVehicle, &bsSend, HIGH_PRIORITY, RELIABLE, 0, false, UNASSIGNED_NETWORK_ID, 0);*/
 }
+
+
+	/*Log("DamageVehicle");
+
+	RakNet::BitStream bsSend;
+	if(m_pVehicle)
+	{
+		if (!m_pPlayerPed->IsAPassenger()) 
+			m_LastVehicle = VehicleID;
+
+		bsSend.Write(VehicleID);
+		bsSend.Write(dwPanelDamage);
+		bsSend.Write(dwDoorDamage);
+		bsSend.Write(byteLightDamage);
+		pNetGame->GetRakClient()->RPC(&RPC_DamageVehicle,&bsSend,HIGH_PRIORITY,RELIABLE_SEQUENCED,0);
+	}*/
 
 unsigned int CVehicle::GetVehicleSubtype()
 {

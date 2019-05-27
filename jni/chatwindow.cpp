@@ -255,29 +255,29 @@ void CChatWindow::AddToChatWindowBuffer(eChatMessageType type, char* szString, c
 		if((MAX_LINE_LENGTH - iBestLineLength) > 12)
 		{
 			// Выводим до MAX_MESSAGE_LENGTH/2
-			cp1251_to_utf8(entry.utf8Message, szString, MAX_LINE_LENGTH);
+			iso_8859_11_to_utf8(entry.utf8Message, szString, MAX_LINE_LENGTH);
 			PushBack(entry);
 
 			// Выводим после MAX_MESSAGE_LENGTH/2
 			entry.szNick[0] = '\0';
-			cp1251_to_utf8(entry.utf8Message, szString+MAX_LINE_LENGTH);
+			iso_8859_11_to_utf8(entry.utf8Message, szString+MAX_LINE_LENGTH);
 			PushBack(entry);
 		}
 		else
 		{
 			// Выводим до пробела
-			cp1251_to_utf8(entry.utf8Message, szString, iBestLineLength);
+			iso_8859_11_to_utf8(entry.utf8Message, szString, iBestLineLength);
 			PushBack(entry);
 
 			// Выводим после пробела
 			entry.szNick[0] = '\0';
-			cp1251_to_utf8(entry.utf8Message, szString+(iBestLineLength+1));
+			iso_8859_11_to_utf8(entry.utf8Message, szString+(iBestLineLength+1));
 			PushBack(entry);
 		}
 	}
 	else
 	{
-		cp1251_to_utf8(entry.utf8Message, szString, MAX_MESSAGE_LENGTH);
+		iso_8859_11_to_utf8(entry.utf8Message, szString, MAX_MESSAGE_LENGTH);
 		PushBack(entry);
 	}
 

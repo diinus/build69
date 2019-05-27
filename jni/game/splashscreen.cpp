@@ -156,9 +156,8 @@ void RenderSplashScreen()
 
 	ImGui::GetOverlayDrawList()->AddText(ImVec2(0, 0), colors[color_scheme][1], 
 		"\n\t"
-		u8"axwellcm@gmail.com\n\t"
-		u8"vk.com/android.samp\n\t"
-		u8"donationalerts.ru/r/4x11");
+		u8"akkawit.tah@gmail.com\n\t"
+		u8"fb.com/aktah.dev");
 
 	ImGui::EndFrame();
 	ImGui::Render();

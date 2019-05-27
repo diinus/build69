@@ -21,7 +21,7 @@ CPlayerTags::CPlayerTags()
 
 CPlayerTags::~CPlayerTags() {}
 
-// допилить
+// to add
 void CPlayerTags::Render()
 {
 	VECTOR VecPos;

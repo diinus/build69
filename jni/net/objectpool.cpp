@@ -43,7 +43,6 @@ bool CObjectPool::New(uint16_t ObjectID, int iModel, VECTOR vecPos, VECTOR vecRo
 	if(m_pObjects[ObjectID])
 	{
 		m_bObjectSlotState[ObjectID] = true;
-
 		return true;
 	}
 

@@ -1,11 +1,10 @@
 #pragma once
 
-/*
-	зачем я это высрал?
-*/
+#define MAX_LANG			3
+#define MAX_INPUT_LINE		5
 
 #define LAYOUT_ENG			0
-#define LAYOUT_RUS			1	
+#define LAYOUT_TH			1
 #define LAYOUT_NUM			2
 
 #define LOWER_CASE			0
@@ -17,6 +16,7 @@
 #define KEY_SWITCH			3
 #define KEY_SPACE 			4
 #define KEY_SEND			5
+#define KEY_NUM				6
 
 #define MAX_INPUT_LEN		0xBF
 
@@ -51,7 +51,7 @@ protected:
 
 private:
 	void InitENG();
-	void InitRU();
+	void InitTH();
 	void InitNUM();
 	kbKey* GetKeyFromPos(int x, int y);
 
@@ -67,11 +67,12 @@ private:
 	float m_fKeySizeY;
 	float m_fFontSize;
 
+	int m_iTemp;
 	int m_iLayout;
 	int m_iCase;
 	int m_iPushedKey;
 
-	std::vector<kbKey> m_Rows[3][4]; // eng, rus, num
+	std::vector<kbKey> m_Rows[MAX_LANG][MAX_INPUT_LINE]; // eng, rus, num
 
 	std::string m_sInput;
 	char m_utf8Input[MAX_INPUT_LEN*3 + 0xF];

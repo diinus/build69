@@ -20,7 +20,7 @@ CLocalPlayer::CLocalPlayer()
 	m_pPlayerPed = pGame->FindPlayerPed();
 	m_bIsActive = false;
 	m_bIsWasted = false;
-
+	
 	m_iSelectedClass = 0;
 	m_bHasSpawnInfo = false;
 	m_bWaitingForSpawnRequestReply = false;
@@ -128,6 +128,7 @@ bool CLocalPlayer::Process()
 			{
 				m_dwLastSendTick = GetTickCount();
 				SendOnFootFullSyncData();
+				SendAimSyncData();
 			}
 		}
 		// PASSENGER
@@ -284,8 +285,6 @@ bool CLocalPlayer::HandlePassengerEntry()
 	return false;
 }
 
-
-
 void CLocalPlayer::UpdateSurfing() {};
 
 void CLocalPlayer::SendEnterVehicleNotification(VEHICLEID VehicleID, bool bPassenger)
@@ -399,6 +398,9 @@ void CLocalPlayer::ApplySpecialAction(uint8_t byteSpecialAction)
 		case SPECIAL_ACTION_NONE:
 		break;
 
+		case SPECIAL_ACTION_CARRY:
+		break;
+
 		case SPECIAL_ACTION_USEJETPACK:
 		break;
 	}
@@ -460,7 +462,8 @@ void CLocalPlayer::SendOnFootFullSyncData()
 
 	ofSync.byteHealth = (uint8_t)m_pPlayerPed->GetHealth();
 	ofSync.byteArmour = (uint8_t)m_pPlayerPed->GetArmour();
-	ofSync.byteCurrentWeapon = 0;
+	ofSync.byteCurrentWeapon = (uint8_t)m_pPlayerPed->GetCurrentWeapon();
+	// Log("SendOnFootFullSyncData: byteCurrentWeapon: %d", ofSync.byteCurrentWeapon);
 	ofSync.byteSpecialAction = 0;
 
 	ofSync.vecMoveSpeed.X = vecMoveSpeed.X;
@@ -485,7 +488,6 @@ void CLocalPlayer::SendOnFootFullSyncData()
 		memcpy(&m_OnFootData, &ofSync, sizeof(ONFOOT_SYNC_DATA));
 	}
 }
-
 void CLocalPlayer::SendInCarFullSyncData()
 {
 	RakNet::BitStream bsVehicleSync;
@@ -582,7 +584,7 @@ void CLocalPlayer::SendPassengerFullSyncData()
 	psSync.byteSeatFlags = m_pPlayerPed->GetVehicleSeatID();
 	psSync.byteDriveBy = 0;//m_bPassengerDriveByMode;
 
-	psSync.byteCurrentWeapon = 0;//m_pPlayerPed->GetCurrentWeapon();
+	// psSync.byteCurrentWeapon = m_OnFootData.byteCurrentWeapon;//m_pPlayerPed->GetCurrentWeapon();
 
 	m_pPlayerPed->GetMatrix(&mat);
 	psSync.vecPos.X = mat.pos.X;
@@ -604,7 +606,31 @@ void CLocalPlayer::SendPassengerFullSyncData()
 
 void CLocalPlayer::SendAimSyncData()
 {
+	RakNet::BitStream bsAimSync;
+	AIM_SYNC_DATA aimSync;
+	// memset(&aimSync, 0, sizeof(AIM_SYNC_DATA));
+	// Log("SendAimSyncData");
+	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+	CLocalPlayer *pLocalPlayer = pPlayerPool->GetLocalPlayer();
+	if (pLocalPlayer) 
+	{
+		//memcpy((void *)&aimSync, (void *)&playerInfo[copyFromPlayer].aimData, sizeof(AIM_SYNC_DATA));
+	
+		memcpy((void *)&aimSync, (void *)&pLocalPlayer->m_AimData, sizeof(AIM_SYNC_DATA));
+
+		if(aimSync.vecAimPos.X == 0.0f && aimSync.vecAimPos.Y == 0.0f && aimSync.vecAimPos.Z == 0.0f)
+		{
+			aimSync.vecAimPos.X = 0.25f;
+		}
+
+		bsAimSync.Write((uint8_t)ID_AIM_SYNC);
+		bsAimSync.Write((char*)&aimSync, sizeof(AIM_SYNC_DATA));
+
+		pNetGame->GetRakClient()->Send(&bsAimSync, HIGH_PRIORITY, UNRELIABLE, 0);
+
+	}
 }
+
 
 void CLocalPlayer::ProcessSpectating()
 {

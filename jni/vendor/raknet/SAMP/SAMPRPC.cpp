@@ -61,6 +61,7 @@ int RPC_EditObject = 117;
 int RPC_ScrSetSpawnInfo = 68;
 int RPC_ScrSetPlayerTeam = 69;
 int RPC_ScrSetPlayerSkin = 153;
+int RPC_ScrSetPlayerAttachedObject = 113;
 int RPC_ScrSetPlayerName = 11;
 int RPC_ScrSetPlayerPos = 12;
 int RPC_ScrSetPlayerPosFindZ = 13;
